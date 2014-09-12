@@ -11,21 +11,25 @@ RUN sed -i -e "s#http://archive.ubuntu.com/ubuntu/#http://free.nchc.org.tw/ubunt
 
 # Update base image
 RUN apt-get update -qq
-RUN apt-get install software-properties-common -y
+RUN apt-get install software-properties-common wget unzip -y
 RUN add-apt-repository -s -y ppa:nginx/stable
 RUN apt-get update -qq
-RUN apt-get upgrade -y
 
-# Install nginx build tools
-# Download nginx source
-RUN apt-get build-dep -y nginx
-mkdir /build
+RUN mkdir /build
 WORKDIR /build
+# Install nginx build tools
+RUN apt-get build-dep -y nginx
+
+# update nginx version
+ENV NGINX_VERSION 1.6.1-2+trusty0
+RUN apt-get update -qq
+RUN apt-get build-dep -y nginx
+
+# Download nginx source
 RUN apt-get source nginx
 RUN mv nginx-*/ nginx/
 
 # Download ngx_pagespeed source
-RUN apt-get install -y wget unzip
 # check https://developers.google.com/speed/pagespeed/module/build_ngx_pagespeed_from_source for new version
 ENV NPS_VERSION 1.8.31.4
 RUN wget http://github.com/pagespeed/ngx_pagespeed/archive/release-${NPS_VERSION}-beta.zip
