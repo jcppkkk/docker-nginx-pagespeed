@@ -48,7 +48,7 @@ RUN \
   sed -i -e "s#^common_configure_flags.*#&\n--add-module=$NGX_PAGESPEED_DIR' \\'#" nginx/debian/rules
 
 # Increase the source package version, since this will help you pin the package later.
-RUN sed -i -e "1 s/)/-speed-passenger)/" nginx/debian/changelog
+RUN sed -i -e "1 s/)/-PageSpeed-${NPS_VERSION}-beta)/" nginx/debian/changelog
 
 # Build & install nginx
 WORKDIR /build/nginx
