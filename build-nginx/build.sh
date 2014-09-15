@@ -1,6 +1,8 @@
 #!/bin/bash
 
-NGINX_VERSION=`xidel https://launchpad.net/~nginx/+archive/ubuntu/stable?field.series_filter=trusty  --extract  "//table[@id='packages_list']//td[2]"`
+BUILD_DIR=deb
+NGINX_VERSION=`curl https://oss-binaries.phusionpassenger.com/apt/passenger/dists/trusty/main/source/Sources.gz \
+	| gunzip | grep -A6 'Package: nginx' | grep 'Version:' | cut -d ' ' -f 2`
 PAGESPEED_VERSION=`curl -s "https://github.com/pagespeed/ngx_pagespeed/releases/" \
 	| grep /tag/ | sed -e 's#.*/v\(.*\)".*#\1#' | head -1 | sed -e 's/-beta//'`
 
@@ -11,10 +13,9 @@ sed -i -e "/^ENV NGINX_VERSION/s/.*/ENV NGINX_VERSION ${NGINX_VERSION}/" \
 echo Nginx: ${NGINX_VERSION}
 echo PageSpeed: ${PAGESPEED_VERSION}
 
-rm -rf deb
+rm -rf $BUILD_DIR
 docker build -t nginx_pagespeed_builder .
-docker run --cidfile="cid" nginx_pagespeed_builder
-docker cp `cat cid`:/build .
-mv build deb
-docker rm `cat cid`
+docker run --cidfile="cid" -d nginx_pagespeed_builder
+docker cp `cat cid`:/$BUILD_DIR .
+docker rm -f `cat cid`
 rm -f cid
