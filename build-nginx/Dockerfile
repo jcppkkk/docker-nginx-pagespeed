@@ -56,11 +56,11 @@ RUN \
   sed -i -e "s#^common_configure_flags.*#&\n--add-module=$NGX_PAGESPEED_DIR \\\#" debian/rules
 
 # Increase the source package version, since this will help you pin the package later.
-RUN debchange --local "-PageSpeed-${NPS_VERSION}-beta" "Add PageSpeed module"
+RUN debchange --nmu "Add PageSpeed-${NPS_VERSION}-beta"
 
 # Build & install nginx
 #RUN dpkg-buildpackage -b -uc -us
-RUN debuild -i -us -uc -b
+RUN debuild -eDEB_BUILD_OPTIONS="parallel=4" -i -us -uc -b 
 
 # Clean up when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
