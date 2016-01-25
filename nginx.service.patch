@@ -1,0 +1,20 @@
+--- /etc/init.d/nginx2  2016-01-25 06:51:40.371785276 +0000
++++ /etc/init.d/nginx   2016-01-25 06:57:08.979823283 +0000
+@@ -84,13 +84,13 @@
+
+ PS=${PS:-"nginx"}                             # process name
+ DESCRIPTION=${DESCRIPTION:-"Nginx Server..."} # process description
+-NGINXPATH=${NGINXPATH:-/usr/local/nginx}      # root path where installed
+-DAEMON=${DAEMON:-$NGINXPATH/sbin/nginx}       # path to daemon binary
+-NGINX_CONF_FILE=${NGINX_CONF_FILE:-$NGINXPATH/conf/nginx.conf} # config file path
++NGINXPATH=/etc/nginx
++DAEMON=/usr/sbin/nginx
++NGINX_CONF_FILE=/etc/nginx/nginx.conf
+
+ PIDNAME=${PIDNAME:-"nginx"}                   # lets you do $PS-slave
+ PIDFILE=${PIDFILE:-$PIDNAME.pid}              # pid file
+-PIDSPATH=${PIDSPATH:-$NGINXPATH/logs}         # default pid location, you should change it
++PIDSPATH=/var/run
+ RUNAS=${RUNAS:-root}                          # user to run as
+
+ SCRIPT_OK=0           # ala error codes

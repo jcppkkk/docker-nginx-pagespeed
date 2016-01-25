@@ -1,0 +1,63 @@
+--- /etc/nginx/nginx.conf2      2016-01-25 14:46:08.753746612 +0000
++++ /etc/nginx/nginx.conf       2016-01-25 15:08:38.414005296 +0000
+@@ -1,5 +1,5 @@
+
+-#user  nobody;
++user  nginx;
+ worker_processes  1;
+
+ #error_log  logs/error.log;
+@@ -17,6 +17,8 @@
+ http {
+     include       mime.types;
+     default_type  application/octet-stream;
++    passenger_root /usr/local/rvm/gems/ruby-2.0.0-p643/gems/passenger-5.0.23;
++    passenger_ruby /usr/local/rvm/gems/ruby-2.0.0-p643/wrappers/ruby;
+
+     #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+     #                  '$status $body_bytes_sent "$http_referer" '
+@@ -95,23 +97,29 @@
+
+     # HTTPS server
+     #
+-    #server {
+-    #    listen       443 ssl;
+-    #    server_name  localhost;
++    server {
++        listen       443 ssl http2;
++        server_name  localhost;
+
+-    #    ssl_certificate      cert.pem;
+-    #    ssl_certificate_key  cert.key;
++        ssl_certificate      cert.pem;
++        ssl_certificate_key  cert.key;
+
+-    #    ssl_session_cache    shared:SSL:1m;
+-    #    ssl_session_timeout  5m;
++        ssl_session_cache    shared:SSL:1m;
++        ssl_session_timeout  5m;
+
+-    #    ssl_ciphers  HIGH:!aNULL:!MD5;
+-    #    ssl_prefer_server_ciphers  on;
++        ssl_ciphers  HIGH:!aNULL:!MD5;
++        ssl_prefer_server_ciphers  on;
+
+-    #    location / {
+-    #        root   html;
+-    #        index  index.html index.htm;
+-    #    }
+-    #}
++        passenger_enabled on;
++        root /var/www/public;
++        pagespeed on;
++        pagespeed FileCachePath /var/ngx_pagespeed_cache;
++        location ~ "\.pagespeed\.([a-z]\.)?[a-z]{2}\.[^.]{10}\.[^.]+" {
++          add_header "" "";
++        }
++        location ~ "^/pagespeed_static/" { }
++        location ~ "^/ngx_pagespeed_beacon$" { }
++
++    }
+
+ }
+
