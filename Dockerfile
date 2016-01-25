@@ -6,21 +6,23 @@ MAINTAINER Jethro Yu "comet.jc@gmail.com"
 CMD ["/sbin/my_init"]
 
 
-# ...put your own build instructions here...
-#############################################################
-
+### Set target versions
 ENV DEBIAN_FRONTEND=noninteractive \
 	HOME=/root \
 	PATH=/usr/local/rvm/bin:$PATH \
 	NPS_VERSION=1.10.33.2 \
 	NGINX_VERSION=1.9.9
+
+
+### Install required packages
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections && \
 	echo 'APT::Get::Clean=always;' >> /etc/apt/apt.conf.d/99AutomaticClean
 RUN apt-get update
 RUN apt-get install -y build-essential zlib1g-dev libpcre3 libpcre3-dev unzip wget curl libcurl4-openssl-dev
-WORKDIR /root
 
-# ngx_pagespeed source
+
+### Download ngx_pagespeed source (at /root)
+WORKDIR /root
 RUN wget https://github.com/pagespeed/ngx_pagespeed/archive/release-${NPS_VERSION}-beta.zip && \
 	unzip release-${NPS_VERSION}-beta.zip && \
 	rm release-${NPS_VERSION}-beta.zip && \
@@ -28,13 +30,13 @@ RUN wget https://github.com/pagespeed/ngx_pagespeed/archive/release-${NPS_VERSIO
 	wget https://dl.google.com/dl/page-speed/psol/${NPS_VERSION}.tar.gz && \
 	tar -xzf ${NPS_VERSION}.tar.gz && \
 	rm ${NPS_VERSION}.tar.gz
-
-# nginx source
+### Download nginx source (at /root)
 RUN wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && \
 	tar -xzf nginx-${NGINX_VERSION}.tar.gz && \
 	rm nginx-${NGINX_VERSION}.tar.gz
 
-# rvm
+
+### Install RVM and passenger
 RUN curl -sSL https://rvm.io/mpapis.asc | gpg --import - && \
 	curl -L https://get.rvm.io | /bin/bash -s stable && \
 	echo 'source /etc/profile.d/rvm.sh' >> /etc/profile && \
@@ -43,8 +45,10 @@ RUN curl -sSL https://rvm.io/mpapis.asc | gpg --import - && \
 	rvm install 2.0.0 && \
 	bash -l -c "rvm use --default 2.0.0 && \
 	gem install passenger --no-rdoc --no-ri"
-RUN apt-get install -y libcurl4-openssl-dev && \
-	adduser --system --no-create-home --disabled-login --disabled-password --group nginx && \
+
+
+### Build nginx & ngx_pagespeed by passenger-install-nginx-module
+RUN adduser --system --no-create-home --disabled-login --disabled-password --group nginx && \
 	usermod -g www-data nginx && \
 	mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /var/cache/nginx && \
 	bash -l -c "rvmsudo passenger-install-nginx-module --auto \
@@ -74,6 +78,8 @@ RUN apt-get install -y libcurl4-openssl-dev && \
 	-Wp,-D_FORTIFY_SOURCE=2' --with-ld-opt='-Wl,-Bsymbolic-functions \
 	-Wl,-z,relro -Wl,--as-needed' \
 	--add-module=$HOME/ngx_pagespeed-release-${NPS_VERSION}-beta\""
+
+### Setup /etc/init.d/nginx and nginx.conf
 ADD https://raw.github.com/JasonGiedymin/nginx-init-ubuntu/master/nginx /etc/init.d/nginx
 ADD nginx.service.patch nginx.conf.patch /
 RUN chmod +x /etc/init.d/nginx && \
@@ -81,6 +87,8 @@ RUN chmod +x /etc/init.d/nginx && \
 	update-rc.d -f nginx defaults && \
 	patch -p0 /etc/nginx/nginx.conf < /nginx.conf.patch && \
 	openssl req -subj '/CN=domain.com/O=My Company Name LTD./C=US' -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout /etc/nginx/cert.key -out /etc/nginx/cert.pem
+
+### Setup rails example app
 RUN cd /var/ && \
 	apt-get install nodejs -y && \
 	bash -l -c 'gem install bundler rails --no-rdoc --no-ri && \
